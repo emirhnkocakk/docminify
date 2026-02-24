@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - run: python -m venv venv
+      - run: venv/bin/pip install --upgrade pip
+      - run: venv/bin/pip install .
+      - run: venv/bin/pip install pytest
+      - run: venv/bin/pytest
