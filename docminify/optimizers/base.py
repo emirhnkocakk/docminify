@@ -9,7 +9,7 @@ class and implement the required abstract methods.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Mapping, Any
 
 
 @dataclass
@@ -32,8 +32,8 @@ class OptimizationResult:
 
     original_size: int
     optimized_size: int
-    warnings: Optional[List[str]] = None
-    errors: Optional[List[str]] = None
+    warnings: List[str] = field(default_factory=list)
+    errors: List[str] = field(default_factory=list)
     reduction_bytes: int = field(init=False)
     reduction_percentage: float = field(init=False)
 
@@ -115,7 +115,7 @@ class Optimizer(ABC):
         pass
 
     @abstractmethod
-    def optimize(self, file_path: Path, config: dict) -> OptimizationResult:
+    def optimize(self, file_path: Path, config: Mapping[str, Any]) -> OptimizationResult:
         """
         Optimize the given file according to the provided configuration.
 
