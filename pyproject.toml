@@ -1,0 +1,17 @@
+```toml
+[project]
+name = "docminify"
+version = "0.1.0"
+description = "Plugin-based document optimization framework"
+authors = [
+    { name="Emirhan Koçak" }
+]
+readme = "README.md"
+requires-python = ">=3.9"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]

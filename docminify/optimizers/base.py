@@ -16,18 +16,6 @@ from typing import List, Mapping, Any
 class OptimizationResult:
     """
     Represents the result of an optimization operation.
-
-    This dataclass encapsulates all information about file optimization,
-    including size metrics and any warnings or errors that occurred during
-    the process.
-
-    Attributes:
-        original_size: Size of the file before optimization (in bytes).
-        optimized_size: Size of the file after optimization (in bytes).
-        reduction_bytes: Number of bytes reduced (calculated automatically).
-        reduction_percentage: Percentage of reduction (calculated automatically).
-        warnings: Optional list of non-fatal warnings encountered during optimization.
-        errors: Optional list of errors encountered during optimization.
     """
 
     original_size: int
@@ -37,6 +25,15 @@ class OptimizationResult:
     reduction_bytes: int = field(init=False)
     reduction_percentage: float = field(init=False)
 
+    def to_dict(self) -> dict:
+        return {
+            "original_size": self.original_size,
+            "optimized_size": self.optimized_size,
+            "reduction_bytes": self.reduction_bytes,
+            "reduction_percentage": self.reduction_percentage,
+            "warnings": self.warnings,
+            "errors": self.errors,
+        }
     def __post_init__(self) -> None:
         """
         Calculate reduction metrics automatically after initialization.
