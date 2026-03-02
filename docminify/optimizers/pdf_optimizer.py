@@ -11,7 +11,7 @@ from typing import Mapping, Any
 from docminify.optimizers.base import Optimizer, OptimizationResult
 
 
-class PdfOptimizer(Optimizer):
+class PDFOptimizer(Optimizer):
     """
     Optimizer for PDF documents.
 
