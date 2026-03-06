@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<section class="py-10 sm:py-14">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <div class="mb-10">
+      <h1 class="text-3xl font-bold mb-2">Dashboard</h1>
+      <p class="dm-text-muted">Overview of your document optimization activity</p>
+    </div>
+
+    <!-- ── Stat cards ─────────────────────────── -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+
+      <!-- Files Optimized -->
+      <div class="dm-bg-card rounded-2xl p-6 dm-shadow border dm-border transition-theme animate-fade-in-up stagger-1" style="opacity:0">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-11 h-11 rounded-xl dm-bg-accent-light flex items-center justify-center">
+            <svg class="w-5 h-5 dm-text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg dm-bg-success-light dm-text-success">+12 %</span>
+        </div>
+        <div class="text-2xl font-extrabold">47</div>
+        <div class="dm-text-muted text-sm mt-0.5">Files Optimized</div>
+      </div>
+
+      <!-- Storage Saved -->
+      <div class="dm-bg-card rounded-2xl p-6 dm-shadow border dm-border transition-theme animate-fade-in-up stagger-2" style="opacity:0">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-11 h-11 rounded-xl dm-bg-accent-light flex items-center justify-center">
+            <svg class="w-5 h-5 dm-text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+            </svg>
+          </div>
+          <span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg dm-bg-success-light dm-text-success">+8 %</span>
+        </div>
+        <div class="text-2xl font-extrabold">128 MB</div>
+        <div class="dm-text-muted text-sm mt-0.5">Storage Saved</div>
+      </div>
+
+      <!-- Avg Compression -->
+      <div class="dm-bg-card rounded-2xl p-6 dm-shadow border dm-border transition-theme animate-fade-in-up stagger-3" style="opacity:0">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-11 h-11 rounded-xl dm-bg-accent-light flex items-center justify-center">
+            <svg class="w-5 h-5 dm-text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+            </svg>
+          </div>
+        </div>
+        <div class="text-2xl font-extrabold">42 %</div>
+        <div class="dm-text-muted text-sm mt-0.5">Avg. Compression</div>
+      </div>
+
+      <!-- This Month -->
+      <div class="dm-bg-card rounded-2xl p-6 dm-shadow border dm-border transition-theme animate-fade-in-up stagger-4" style="opacity:0">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-11 h-11 rounded-xl dm-bg-accent-light flex items-center justify-center">
+            <svg class="w-5 h-5 dm-text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="text-2xl font-extrabold">12</div>
+        <div class="dm-text-muted text-sm mt-0.5">This Month</div>
+      </div>
+    </div>
+
+    <!-- ── Quick Upload banner ────────────────── -->
+    <div class="dm-bg-card rounded-2xl p-6 dm-shadow border dm-border mb-10 transition-theme">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <h3 class="text-lg font-bold">Quick Upload</h3>
+          <p class="dm-text-muted text-sm">Optimize a new document right away</p>
+        </div>
+        <a href="/#upload"
+           class="btn-primary px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 flex-shrink-0">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
+          Upload File
+        </a>
+      </div>
+    </div>
+
+    <!-- ── Recent optimizations table ─────────── -->
+    <div class="dm-bg-card rounded-2xl dm-shadow border dm-border overflow-hidden transition-theme">
+      <div class="p-6 border-b dm-border">
+        <h3 class="text-lg font-bold">Recent Optimizations</h3>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b dm-border">
+              <th class="text-left p-4 dm-text-faint font-medium text-xs uppercase tracking-wider">File</th>
+              <th class="text-left p-4 dm-text-faint font-medium text-xs uppercase tracking-wider">Type</th>
+              <th class="text-left p-4 dm-text-faint font-medium text-xs uppercase tracking-wider hidden sm:table-cell">Original</th>
+              <th class="text-left p-4 dm-text-faint font-medium text-xs uppercase tracking-wider hidden sm:table-cell">Optimized</th>
+              <th class="text-left p-4 dm-text-faint font-medium text-xs uppercase tracking-wider">Savings</th>
+              <th class="text-left p-4 dm-text-faint font-medium text-xs uppercase tracking-wider hidden md:table-cell">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="table-row border-b dm-border">
+              <td class="p-4 font-medium">quarterly-report.pdf</td>
+              <td class="p-4"><span class="badge-pdf text-[11px] font-bold px-2.5 py-1 rounded-lg">PDF</span></td>
+              <td class="p-4 dm-text-muted hidden sm:table-cell">4.2 MB</td>
+              <td class="p-4 dm-text-muted hidden sm:table-cell">2.1 MB</td>
+              <td class="p-4"><span class="dm-text-success font-semibold">50 %</span></td>
+              <td class="p-4 dm-text-muted hidden md:table-cell">Today</td>
+            </tr>
+            <tr class="table-row border-b dm-border">
+              <td class="p-4 font-medium">presentation-v3.pptx</td>
+              <td class="p-4"><span class="badge-pptx text-[11px] font-bold px-2.5 py-1 rounded-lg">PPTX</span></td>
+              <td class="p-4 dm-text-muted hidden sm:table-cell">12.8 MB</td>
+              <td class="p-4 dm-text-muted hidden sm:table-cell">7.4 MB</td>
+              <td class="p-4"><span class="dm-text-success font-semibold">42 %</span></td>
+              <td class="p-4 dm-text-muted hidden md:table-cell">Yesterday</td>
+            </tr>
+            <tr class="table-row border-b dm-border">
+              <td class="p-4 font-medium">financials-q3.xlsx</td>
+              <td class="p-4"><span class="badge-xlsx text-[11px] font-bold px-2.5 py-1 rounded-lg">XLSX</span></td>
+              <td class="p-4 dm-text-muted hidden sm:table-cell">3.6 MB</td>
+              <td class="p-4 dm-text-muted hidden sm:table-cell">2.3 MB</td>
+              <td class="p-4"><span class="dm-text-success font-semibold">36 %</span></td>
+              <td class="p-4 dm-text-muted hidden md:table-cell">2 days ago</td>
+            </tr>
+            <tr class="table-row border-b dm-border">
+              <td class="p-4 font-medium">meeting-notes.docx</td>
+              <td class="p-4"><span class="badge-docx text-[11px] font-bold px-2.5 py-1 rounded-lg">DOCX</span></td>
+              <td class="p-4 dm-text-muted hidden sm:table-cell">1.8 MB</td>
+              <td class="p-4 dm-text-muted hidden sm:table-cell">0.9 MB</td>
+              <td class="p-4"><span class="dm-text-success font-semibold">50 %</span></td>
+              <td class="p-4 dm-text-muted hidden md:table-cell">3 days ago</td>
+            </tr>
+            <tr class="table-row border-b dm-border">
+              <td class="p-4 font-medium">server-logs.txt</td>
+              <td class="p-4"><span class="badge-txt text-[11px] font-bold px-2.5 py-1 rounded-lg">TXT</span></td>
+              <td class="p-4 dm-text-muted hidden sm:table-cell">5.1 MB</td>
+              <td class="p-4 dm-text-muted hidden sm:table-cell">1.2 MB</td>
+              <td class="p-4"><span class="dm-text-success font-semibold">76 %</span></td>
+              <td class="p-4 dm-text-muted hidden md:table-cell">5 days ago</td>
+            </tr>
+            <tr class="table-row">
+              <td class="p-4 font-medium">project-assets.zip</td>
+              <td class="p-4"><span class="badge-zip text-[11px] font-bold px-2.5 py-1 rounded-lg">ZIP</span></td>
+              <td class="p-4 dm-text-muted hidden sm:table-cell">25.4 MB</td>
+              <td class="p-4 dm-text-muted hidden sm:table-cell">18.2 MB</td>
+              <td class="p-4"><span class="dm-text-success font-semibold">28 %</span></td>
+              <td class="p-4 dm-text-muted hidden md:table-cell">1 week ago</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
