@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}DocMinify{% endblock %} — Document Optimizer</title>
+  <meta name="description" content="Compress documents without losing quality. Optimize PDF, Office files, and text documents instantly.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
+
+  <!-- Tailwind CSS v4 (browser build) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+  <!-- DocMinify custom styles -->
+  <link rel="stylesheet" href="/static/css/styles.css">
+
+  <!-- Prevent FOUC: apply saved theme before first paint -->
+  <script>
+    (function(){
+      var t = localStorage.getItem('docminify-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+</head>
+
+<body class="dm-bg dm-text min-h-screen transition-theme antialiased">
+
+  <!-- ───── Notification toast container ───── -->
+  <div id="notification-container" class="fixed top-20 right-4 z-[60] flex flex-col items-end gap-2 max-w-sm"></div>
+
+  <!-- ═══════════════════════════════════════════
+       NAVBAR
+       ═══════════════════════════════════════════ -->
+  <nav class="dm-bg-nav nav-blur fixed top-0 inset-x-0 z-50 border-b dm-border transition-theme">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+
+        <!-- Logo -->
+        <a href="/" class="flex items-center gap-2.5 group">
+          <div class="w-9 h-9 dm-gradient rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <span class="text-xl font-extrabold dm-gradient-text tracking-tight">DocMinify</span>
+        </a>
+
+        <!-- Desktop links -->
+        <div class="hidden md:flex items-center gap-1">
+          <a href="/"          class="nav-link px-4 py-2 rounded-lg text-sm font-medium {% if page == 'home' %}active{% endif %}">Home</a>
+          <a href="/dashboard" class="nav-link px-4 py-2 rounded-lg text-sm font-medium {% if page == 'dashboard' %}active{% endif %}">Dashboard</a>
+          <a href="/account"   class="nav-link px-4 py-2 rounded-lg text-sm font-medium {% if page == 'account' %}active{% endif %}">Account</a>
+        </div>
+
+        <!-- Right actions -->
+        <div class="flex items-center gap-2.5">
+          <!-- Theme toggle -->
+          <button id="theme-toggle"
+                  class="relative p-2.5 rounded-xl dm-bg-card border dm-border dm-shadow hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  title="Toggle theme">
+            <!-- Sun — light -->
+            <svg class="w-[18px] h-[18px] theme-icon theme-icon-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <!-- Moon — dark -->
+            <svg class="w-[18px] h-[18px] theme-icon theme-icon-dark hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+            <!-- Eye — dim -->
+            <svg class="w-[18px] h-[18px] theme-icon theme-icon-dim hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </button>
+
+          <!-- Hamburger (mobile) -->
+          <button id="mobile-menu-toggle"
+                  class="md:hidden p-2.5 rounded-xl dm-bg-card border dm-border dm-shadow cursor-pointer">
+            <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════
+       MOBILE MENU OVERLAY
+       ═══════════════════════════════════════════ -->
+  <div id="mobile-menu" class="fixed inset-0 z-[55] hidden">
+    <div id="mobile-menu-backdrop" class="absolute inset-0 bg-black/50"></div>
+    <div class="menu-panel absolute right-0 top-0 h-full w-72 dm-bg-card dm-shadow-xl p-6 overflow-y-auto">
+      <!-- Close -->
+      <button id="mobile-menu-close" class="absolute top-4 right-4 p-2 rounded-lg hover:bg-[var(--bg-card-hover)] transition-colors cursor-pointer">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <!-- Links -->
+      <div class="mt-14 space-y-1.5">
+        <a href="/"          class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium hover:bg-[var(--bg-card-hover)] transition-colors">
+          <svg class="w-5 h-5 dm-text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4"/></svg>
+          Home
+        </a>
+        <a href="/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium hover:bg-[var(--bg-card-hover)] transition-colors">
+          <svg class="w-5 h-5 dm-text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+          Dashboard
+        </a>
+        <a href="/account"   class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium hover:bg-[var(--bg-card-hover)] transition-colors">
+          <svg class="w-5 h-5 dm-text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zm-4 7a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          Account
+        </a>
+      </div>
+
+      <!-- Theme row -->
+      <div class="mt-6 pt-6 border-t dm-border">
+        <button id="mobile-theme-toggle"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium hover:bg-[var(--bg-card-hover)] transition-colors cursor-pointer">
+          <svg class="w-5 h-5 dm-text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+          </svg>
+          <span>Toggle Theme</span>
+          <span class="ml-auto text-xs dm-text-faint theme-label">Light</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       MAIN CONTENT
+       ═══════════════════════════════════════════ -->
+  <main class="pt-16">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ═══════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════ -->
+  <footer class="dm-bg-card border-t dm-border mt-24 transition-theme">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
+        <!-- Brand -->
+        <div class="md:col-span-2">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 dm-gradient rounded-lg flex items-center justify-center">
+              <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            <span class="text-lg font-bold dm-gradient-text">DocMinify</span>
+          </div>
+          <p class="dm-text-muted text-sm leading-relaxed max-w-md">
+            Compress your documents without losing quality. Fast, secure, and easy-to-use optimization for all your files.
+          </p>
+        </div>
+
+        <!-- Product -->
+        <div>
+          <h4 class="font-semibold mb-4 text-xs uppercase tracking-widest dm-text-faint">Product</h4>
+          <ul class="space-y-2.5 text-sm">
+            <li><a href="/"          class="dm-text-muted hover:underline transition-colors">Home</a></li>
+            <li><a href="/dashboard" class="dm-text-muted hover:underline transition-colors">Dashboard</a></li>
+            <li><a href="/account"   class="dm-text-muted hover:underline transition-colors">Account</a></li>
+          </ul>
+        </div>
+
+        <!-- Legal -->
+        <div>
+          <h4 class="font-semibold mb-4 text-xs uppercase tracking-widest dm-text-faint">Legal</h4>
+          <ul class="space-y-2.5 text-sm">
+            <li><a href="#" class="dm-text-muted hover:underline transition-colors">Privacy Policy</a></li>
+            <li><a href="#" class="dm-text-muted hover:underline transition-colors">Terms of Service</a></li>
+            <li><a href="#" class="dm-text-muted hover:underline transition-colors">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-12 pt-8 border-t dm-border flex flex-col sm:flex-row items-center justify-between gap-2">
+        <p class="dm-text-faint text-sm">© 2024 DocMinify. All rights reserved.</p>
+        <p class="dm-text-faint text-sm">Built with ❤️ for better documents</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- DocMinify JS -->
+  <script src="/static/js/app.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
