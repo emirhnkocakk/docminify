@@ -12,35 +12,28 @@
     </div>
 
     <!-- ── Profile card ──────────────────────── -->
-    <div class="dm-bg-card rounded-2xl dm-shadow-lg border dm-border overflow-hidden mb-8 transition-theme">
-      <!-- Cover gradient -->
-      <div class="h-36 dm-gradient relative">
-        <div class="absolute inset-0 opacity-20"
+    <div class="profile-card dm-bg-card rounded-2xl dm-shadow-lg border dm-border overflow-hidden mb-8 transition-theme">
+      <div class="profile-card-header dm-gradient">
+        <div class="profile-card-header-pattern"
              style="background-image:url('data:image/svg+xml,<svg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;><circle cx=&quot;30&quot; cy=&quot;30&quot; r=&quot;1.5&quot; fill=&quot;white&quot;/></svg>');"></div>
       </div>
 
-      <div class="px-6 sm:px-8 pb-8">
-        <div class="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-14 mb-4">
-          <!-- Avatar -->
-          <div class="w-24 h-24 rounded-2xl dm-gradient flex items-center justify-center text-white text-3xl font-bold
-                      ring-4 ring-[var(--bg-card)] dm-shadow-lg flex-shrink-0 select-none">
-            AC
-          </div>
-          <div class="sm:mb-1.5 min-w-0">
-            <h2 class="text-2xl font-bold truncate">Alex Chen</h2>
-            <p class="dm-text-muted text-sm">alex@example.com</p>
-          </div>
-          <div class="sm:ml-auto sm:mb-2 flex-shrink-0">
-            <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl dm-bg-accent-light dm-text-accent font-semibold text-sm">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-              </svg>
-              Free Plan
-            </span>
-          </div>
+      <div class="profile-card-body px-6 sm:px-8 pb-8">
+        <div class="profile-avatar dm-gradient dm-shadow-lg">AC</div>
+
+        <div class="profile-meta">
+          <h2 class="text-2xl font-bold">Alex Chen</h2>
+          <p class="dm-text-muted text-sm">alex@example.com</p>
+          <span class="profile-plan inline-flex items-center gap-1.5 px-4 py-2 rounded-xl dm-bg-accent-light dm-text-accent font-semibold text-sm mt-3">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+            </svg>
+            Free Plan
+          </span>
         </div>
-        <p class="dm-text-faint text-sm">Member since March 2024</p>
+
+        <p class="dm-text-faint text-sm mt-5 text-center">Member since March 2024</p>
       </div>
     </div>
 

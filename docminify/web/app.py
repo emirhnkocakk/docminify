@@ -5,13 +5,10 @@ Integrates document optimization plugins for PDF, Office, ZIP, and text files.
 """
 
 from fastapi import FastAPI, Request, UploadFile, File
-from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
-import shutil
-import io
-import os
 import uuid
 import traceback
 
@@ -90,12 +87,13 @@ async def optimize(file: UploadFile = File(...)):
     Returns optimized file with metadata or error JSON.
     """
     file_id = str(uuid.uuid4())
+    safe_name = Path(file.filename or "uploaded_file").name
     temp_input_path = None
     temp_output_path = None
     
     try:
         # Save uploaded file to temporary location
-        temp_input_path = UPLOAD_DIR / f"{file_id}_{file.filename}"
+        temp_input_path = UPLOAD_DIR / f"{file_id}_{safe_name}"
         contents = await file.read()
         
         with open(temp_input_path, "wb") as buffer:
@@ -107,28 +105,21 @@ async def optimize(file: UploadFile = File(...)):
             config={"compression_level": "medium"}
         )
         
-        # Simulate optimized file content
-        # (In production, optimizers would actually modify the file)
-        optimized_size = optimization_result["optimized_size"]
-        if optimized_size > 0 and len(contents) > optimized_size:
-            # Simulate compression by truncating (don't actually do this in production!)
-            # For demo: return proportionally smaller "optimized" content
-            reduction_ratio = optimized_size / len(contents)
-            optimized_bytes = contents[:int(len(contents) * reduction_ratio)]
-        else:
-            optimized_bytes = contents
+        # Read back the (potentially) optimized file written by optimizer.
+        with open(temp_input_path, "rb") as optimized_file:
+            optimized_bytes = optimized_file.read()
         
         # Save to output directory
-        temp_output_path = OUTPUT_DIR / f"optimized_{file_id}_{file.filename}"
+        temp_output_path = OUTPUT_DIR / f"optimized_{file_id}_{safe_name}"
         with open(temp_output_path, "wb") as f:
             f.write(optimized_bytes)
         
-        # Return file with optimization metadata headers
-        return StreamingResponse(
-            io.BytesIO(optimized_bytes),
-            media_type="application/octet-stream",
+        # Return a proper file download response for binary safety.
+        return FileResponse(
+            path=temp_output_path,
+            media_type=file.content_type or "application/octet-stream",
+            filename=f"optimized_{safe_name}",
             headers={
-                "Content-Disposition": f"attachment; filename=optimized_{file.filename}",
                 "X-Original-Size": str(optimization_result["original_size"]),
                 "X-Optimized-Size": str(len(optimized_bytes)),
                 "X-Reduction-Bytes": str(optimization_result["reduction_bytes"]),

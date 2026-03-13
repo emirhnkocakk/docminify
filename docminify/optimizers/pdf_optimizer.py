@@ -1,8 +1,8 @@
 """
 PDF optimizer plugin for the docminify tool.
 
-This module provides a PDF-specific optimizer implementation that simulates
-compression based on configurable compression levels.
+This module provides a PDF-specific optimizer implementation that performs
+lossless PDF optimization when pikepdf is available.
 """
 
 from pathlib import Path
@@ -10,14 +10,19 @@ from typing import Mapping, Any
 
 from docminify.optimizers.base import Optimizer, OptimizationResult
 
+try:
+    import pikepdf
+except ImportError:  # pragma: no cover - handled via runtime warning
+    pikepdf = None
+
 
 class PDFOptimizer(Optimizer):
     """
     Optimizer for PDF documents.
 
     This optimizer handles PDF files with configurable compression levels.
-    Currently simulates optimization without modifying the actual file,
-    making it suitable for testing and development.
+    When pikepdf is available, it performs a lossless optimization pass by
+    rewriting and recompressing streams without rasterizing page content.
 
     Supported compression levels:
     - "low": 10% reduction
@@ -65,11 +70,11 @@ class PDFOptimizer(Optimizer):
         config: Mapping[str, Any],
     ) -> OptimizationResult:
         """
-        Simulate PDF optimization based on compression level.
+        Optimize PDF using lossless stream recompression.
 
-        This method validates the input file and simulates PDF compression
-        without modifying the actual file. It supports configurable compression
-        levels to demonstrate different optimization scenarios.
+        This method validates the input file and performs lossless PDF rewrite
+        when pikepdf is installed. If optimization does not reduce size,
+        the original file is preserved.
 
         Args:
             file_path: Path to the PDF file to optimize.
@@ -96,16 +101,25 @@ class PDFOptimizer(Optimizer):
         # Get original size
         original_size = file_path.stat().st_size
 
-        # Determine compression level and calculate reduction percentage
+        # Determine compression level for save strategy and gather warnings
         compression_level = config.get("compression_level", "medium")
-        reduction_percentage = self._get_reduction_percentage(compression_level)
         warnings = self._validate_config(
             config, compression_level, original_size
         )
 
-        # Calculate optimized size
-        optimized_size = int(original_size * (1 - reduction_percentage / 100))
-        optimized_size = max(0, optimized_size)
+        # If pikepdf is missing, do not risk file corruption. Return unchanged file.
+        if pikepdf is None:
+            warnings.append(
+                "pikepdf is not installed. Returning original PDF without optimization."
+            )
+            return OptimizationResult(
+                original_size=original_size,
+                optimized_size=original_size,
+                warnings=warnings,
+                errors=[],
+            )
+
+        optimized_size = self._optimize_with_pikepdf(file_path, compression_level, warnings)
 
         return OptimizationResult(
             original_size=original_size,
@@ -115,24 +129,58 @@ class PDFOptimizer(Optimizer):
         )
 
     @staticmethod
-    def _get_reduction_percentage(compression_level: str) -> float:
+    def _optimize_with_pikepdf(
+        file_path: Path,
+        compression_level: str,
+        warnings: list[str],
+    ) -> int:
         """
-        Map compression level to reduction percentage.
+        Optimize PDF file in-place using pikepdf in a lossless way.
 
         Args:
-            compression_level: One of "low", "medium", "high", or custom value.
+            file_path: PDF path to optimize.
+            compression_level: One of "low", "medium", "high".
+            warnings: Mutable warning list.
 
         Returns:
-            The reduction percentage (0-100) for the given level.
-            Returns default (20%) for unrecognized levels.
+            Final optimized file size in bytes.
         """
-        compression_map = {
-            "low": 10.0,
-            "medium": 20.0,
-            "high": 35.0,
-        }
+        original_size = file_path.stat().st_size
+        temp_output = file_path.with_suffix(".tmp.optimized.pdf")
 
-        return compression_map.get(compression_level, 20.0)
+        # Tune save behavior per level while preserving visual fidelity.
+        linearize = compression_level == "high"
+        object_stream_mode = (
+            pikepdf.ObjectStreamMode.preserve
+            if compression_level == "low"
+            else pikepdf.ObjectStreamMode.generate
+        )
+
+        try:
+            with pikepdf.open(file_path) as pdf:
+                pdf.save(
+                    temp_output,
+                    compress_streams=True,
+                    recompress_flate=True,
+                    object_stream_mode=object_stream_mode,
+                    linearize=linearize,
+                    preserve_pdfa=True,
+                )
+
+            optimized_size = temp_output.stat().st_size
+
+            # Only replace file when optimization is beneficial.
+            if optimized_size < original_size:
+                temp_output.replace(file_path)
+                return optimized_size
+
+            warnings.append("PDF is already optimized or could not be reduced further.")
+            temp_output.unlink(missing_ok=True)
+            return original_size
+        except Exception as exc:
+            warnings.append(f"Lossless PDF optimization skipped: {exc}")
+            temp_output.unlink(missing_ok=True)
+            return original_size
 
     @staticmethod
     def _validate_config(

@@ -2,7 +2,7 @@
 Text file optimizer plugin for the docminify tool.
 
 This module provides a text-specific optimizer implementation for plain text
-and markdown files, simulating whitespace removal and line ending normalization.
+and markdown files using safe, in-place normalization.
 """
 
 from pathlib import Path
@@ -16,8 +16,8 @@ class TextOptimizer(Optimizer):
     Optimizer for text documents (TXT, MD).
 
     This optimizer handles plain text and markdown files with configurable
-    compression levels. Simulates optimization by removing unnecessary whitespace
-    and normalizing line endings without modifying the actual file.
+    compression levels. It performs safe normalization in-place (line endings,
+    trailing whitespace policy) and only keeps changes when file size is reduced.
 
     Supported compression levels:
     - "low": 5% reduction
@@ -65,11 +65,14 @@ class TextOptimizer(Optimizer):
         config: Mapping[str, Any],
     ) -> OptimizationResult:
         """
-        Simulate text file optimization based on compression level.
+        Optimize text file in-place using safe normalization rules.
 
-        This method validates the input file and simulates text optimization
-        (whitespace removal and line ending normalization) without modifying
-        the actual file. It supports configurable compression levels.
+        The optimizer applies conservative transformations:
+        - normalize line endings to "\n"
+        - trim trailing spaces for .txt and optionally for .md
+        - collapse repeated empty lines based on compression level
+
+        Changes are committed only when resulting size is smaller.
 
         Args:
             file_path: Path to the text file to optimize.
@@ -96,16 +99,13 @@ class TextOptimizer(Optimizer):
         # Get original size
         original_size = file_path.stat().st_size
 
-        # Determine compression level and calculate reduction percentage
+        # Determine compression level and warnings
         compression_level = config.get("compression_level", "medium")
-        reduction_percentage = self._get_reduction_percentage(compression_level)
         warnings = self._validate_config(
             config, compression_level, original_size
         )
 
-        # Calculate optimized size
-        optimized_size = int(original_size * (1 - reduction_percentage / 100))
-        optimized_size = max(0, optimized_size)
+        optimized_size = self._optimize_in_place(file_path, config, compression_level, warnings)
 
         return OptimizationResult(
             original_size=original_size,
@@ -115,24 +115,81 @@ class TextOptimizer(Optimizer):
         )
 
     @staticmethod
-    def _get_reduction_percentage(compression_level: str) -> float:
+    def _optimize_in_place(
+        file_path: Path,
+        config: Mapping[str, Any],
+        compression_level: str,
+        warnings: list[str],
+    ) -> int:
         """
-        Map compression level to reduction percentage.
+        Apply safe text normalization and keep result only if smaller.
 
         Args:
-            compression_level: One of "low", "medium", "high", or custom value.
+            file_path: File path to optimize.
+            config: Optimizer configuration.
+            compression_level: Selected compression level.
+            warnings: Mutable warnings list.
 
         Returns:
-            The reduction percentage (0-100) for the given level.
-            Returns default (15%) for unrecognized levels.
+            Final file size in bytes.
         """
-        compression_map = {
-            "low": 5.0,
-            "medium": 15.0,
-            "high": 25.0,
-        }
+        original_bytes = file_path.read_bytes()
 
-        return compression_map.get(compression_level, 15.0)
+        # Try utf-8 first, then common fallbacks.
+        decoded_text = None
+        used_encoding = None
+        for encoding in ("utf-8", "utf-8-sig", "cp1254", "latin-1"):
+            try:
+                decoded_text = original_bytes.decode(encoding)
+                used_encoding = encoding
+                break
+            except UnicodeDecodeError:
+                continue
+
+        if decoded_text is None or used_encoding is None:
+            warnings.append("Text encoding could not be decoded safely; file left unchanged.")
+            return len(original_bytes)
+
+        is_markdown = file_path.suffix.lower() == ".md"
+        trim_markdown_trailing = bool(config.get("trim_markdown_trailing_whitespace", False))
+
+        text = decoded_text.replace("\r\n", "\n").replace("\r", "\n")
+        lines = text.split("\n")
+        normalized_lines: list[str] = []
+
+        for line in lines:
+            if is_markdown and not trim_markdown_trailing:
+                normalized_lines.append(line)
+            else:
+                normalized_lines.append(line.rstrip(" \t"))
+
+        if compression_level in {"medium", "high"}:
+            max_empty = 2 if compression_level == "medium" else 1
+            compact_lines: list[str] = []
+            empty_run = 0
+            for line in normalized_lines:
+                if line == "":
+                    empty_run += 1
+                    if empty_run <= max_empty:
+                        compact_lines.append(line)
+                else:
+                    empty_run = 0
+                    compact_lines.append(line)
+            normalized_lines = compact_lines
+
+        normalized_text = "\n".join(normalized_lines)
+        normalized_bytes = normalized_text.encode("utf-8")
+
+        if len(normalized_bytes) < len(original_bytes):
+            file_path.write_bytes(normalized_bytes)
+            if used_encoding not in {"utf-8", "utf-8-sig"}:
+                warnings.append(
+                    f"File re-encoded from {used_encoding} to utf-8 during optimization."
+                )
+            return len(normalized_bytes)
+
+        warnings.append("No additional text size reduction was possible.")
+        return len(original_bytes)
 
     @staticmethod
     def _validate_config(

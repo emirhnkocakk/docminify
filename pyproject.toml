@@ -7,6 +7,9 @@ authors = [
 ]
 readme = "README.md"
 requires-python = ">=3.9"
+dependencies = [
+    "pikepdf>=9.0.0",
+]
 
 [build-system]
 requires = ["setuptools>=61.0"]
